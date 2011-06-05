@@ -1,7 +1,11 @@
 (function($){
 	$.anaclog = {
 		version : "0.0.1",
-		fractionToRad : function(fraction){ return Math.PI * (2.0 * fraction - 0.5); },
+		toRad : function(value,unit) {
+			if ( unit == 'Minutes' || unit == 'Seconds' ) return $.anaclog.fractionToRad(value/60);
+			return $.anaclog.fractionToRad(value/12);
+		},
+		fractionToRad : function(fraction) { return Math.PI * (2.0 * fraction - 0.5); },
 		radial: function( ctx, r, fraction, style ) {
 			ctx.save();
 			ctx.translate( r, r );
@@ -15,8 +19,8 @@
 			ctx.restore();
 		},
 		segment: function( ctx, r, segment ) {
-			var startRadians = $.anaclog.fractionToRad(segment.convert(segment.start));
-			var endRadians = $.anaclog.fractionToRad(segment.convert(segment.end));
+			var startRadians = $.anaclog.toRad(segment.start,segment.unit);
+			var endRadians = $.anaclog.toRad(segment.end,segment.unit);
 			ctx.save();
 			ctx.lineWidth = 1;
 			ctx.strokeStyle = segment.color;
@@ -29,8 +33,13 @@
 			ctx.fill();
 			ctx.restore();
 		},
+		checkTimer:function ( $self, now, segment ){
+			var current = now['get'+segment.unit]();
+			if ( current == segment.start ) $self.trigger("timerStart");
+			else if ( current == segment.end ) $self.trigger("timerEnd");
+		}
 	};
-	$.fn.clock = function( o ){
+	$.fn.anaclog = function( o ){
 		
 		// Defaults
 		o = $.extend({
@@ -40,15 +49,15 @@
 				hour : { color:'black', width:3, start:.85, end:.95 },
 				minute : { color:'white', width:2, start:.9, end:.95 }
 			},
-			hands : [
-				{ width:7, start:-0.1, end:.5, color:'black', value:function(time){return time.getHours() / 12 + time.getMinutes() / 720 } },
-				{ width:4, start:-0.1, end:.7, color:'black', value:function(time){return time.getMinutes() / 60} },
-				{ width:2, start:-0.1, end:.9, color:'red', value:function(time){return time.getSeconds() / 60} }
-			],
-			timers : [
-				{ color:'#b0c878', radius:0.5, start:35, end:40, convert:function(value){ return value/60; } },
-				{ color:'#d8df93', radius:0.5, start:55, end:45, convert:function(value){ return value/60; } }
-			],
+			hands : {
+				hour:{ width:7, start:-0.1, end:.5, color:'black', value:function(time){return time.getHours() / 12 + time.getMinutes() / 720 } },
+				minute:{ width:4, start:-0.1, end:.7, color:'black', value:function(time){return time.getMinutes() / 60} },
+				second:{ width:2, start:-0.1, end:.9, color:'red', value:function(time){return time.getSeconds() / 60} }
+			},
+			timers : {
+				a: { color:'#b0c878', radius:0.5, start:35, end:40, unit:'Minutes' },
+				b: { color:'#d8df93', radius:0.5, start:55, end:45, unit:'Seconds' }
+			},
 			border : { width:2, color:'black' }
 		}, o);
 		
@@ -63,7 +72,9 @@
 			self.style.width = r*2 + "px";
 			self.style.height = r*2 + "px";
 			
-			$.anaclog.interval = setInterval( function(){ // Refresh each canvas
+			$self.bind();
+			
+			$.anaclog.interval = setInterval( function(){ // Refresh each canvas on interval
 				
 				var now = new Date();
 				
@@ -71,8 +82,9 @@
 				ctx.clearRect( 0, 0, 2*r, 2*r );
 				
 				// draw timers
-				for ( var i = 0; i < o.timers.length; i++ ) {
-					var segment = o.timers[i];
+				for ( var name in o.timers ) {
+					var segment = o.timers[name];
+					$.anaclog.checkTimer($self, now, segment);
 					$.anaclog.segment( ctx, r, segment );
 				}
 				// draw ticks
@@ -81,8 +93,8 @@
 					$.anaclog.radial( ctx, r, i/60, mark );
 				}
 				// draw hands
-				for ( var i = 0; i < o.hands.length; i++ ) {
-					var hand = o.hands[i];
+				for ( var name in o.hands ) {
+					var hand = o.hands[name];
 					$.anaclog.radial( ctx, r, hand.value(now), hand );
 				}
 				

@@ -1,0 +1,23 @@
+<html>
+	<head>
+		<script type="text/javascript" src="../lib/jquery-1.5.2.min.js"></script>
+		<script type="text/javascript" src="../jquery-anaclog.js"></script>
+	</head>
+	<body>
+		<canvas id="clock"></canvas>
+		<div><div>
+
+		<script>
+			$('#clock')
+				.anaclog({
+					timers:[
+						{ color:'#b0c878', radius:0.95, start:50, end:15, unit:'Seconds' },
+						{ color:'#d8df93', radius:0.7, start:55, end:45, unit:'Minutes' }
+					]
+				})
+				.bind('timerStart',function(e){ $('body>div').append('<div>timer started: '+e+'</div>'); console.log(e); })
+				.bind('timerEnd',function(e){ $('body>div').append('<div>timer ended:'+e+'</div>'); console.log(e); });
+				
+		</script>
+	</body>
+</html>
