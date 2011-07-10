@@ -5,6 +5,10 @@
 	</head>
 	<body>
 		<canvas id="clock"></canvas>
+		<canvas id="arc1"></canvas>
+		<canvas id="arc2"></canvas>
+		<canvas id="arc3"></canvas>
+		<canvas id="arc4"></canvas>
 		<div><div>
 
 		<script>
@@ -17,6 +21,37 @@
 				})
 				.bind('timerStart',function(e){ $('body>div').append('<div>timer started: '+e+'</div>'); console.log(e); })
 				.bind('timerEnd',function(e){ $('body>div').append('<div>timer ended:'+e+'</div>'); console.log(e); });
+			
+			var now = new Date();
+			var fortySeconds = new Date(now.getTime()+(40*1000));
+			var oneMinuteTwentySeconds = new Date(now.getTime()+(25*60*1000));
+			var fortyFiveMinutes = new Date(now.getTime()+(45*60*1000));
+			var oneHourFortyFive = new Date(now.getTime()+(1.75*60*60*1000));
+			
+			$('#arc1').arcs({ 
+				radius:100,
+				segments:{
+					past:{ color:'#b0c8a8', radius:0.95, start:0, end:15, unit:'Minutes'},
+					present:{ color:'#a0c878', radius:0.95, start:15, end:25, unit:'Minutes'},
+					future:{ color:'#90c878', radius:0.95, start:25, end:50, unit:'Minutes'},
+				}
+			});
+			
+			$('#arc2').step({ 
+				radius:45,
+				now:new Date(0),
+				process:{
+					start:0, // 25 minutes ago
+					end:45*60*1000 // 15 minutes ahead
+				},
+				step: {
+					start:7*60*1000,
+					end:15*60*1000
+				}
+			});
+			
+			$('#arc3').until({ time:fortyFiveMinutes });
+			$('#arc4').until({ time:oneHourFortyFive });
 				
 		</script>
 	</body>
